@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>用户列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" th:href="@{/css/public.css}" media="all"/>
+</head>
+<body class="childrenBody">
+<div style="width: 100%; height: 80px; position: relative; line-height: 80px;">
+    <div class="layui-form"
+         style="width: 550px; height: 80px; float: right;">
+        <table class="layui-table">
+            <tr>
+                <th><a href="#"><i class="layui-icon">&#xe65c;</i></a></th>
+                <th><a class="addEmp_btn"><i class="layui-icon">&#xe654;</i>添加用户</a></th>
+                <th th:if="${session.employee.rank} == 0 "><a class="delAll_btn"><i
+                        class="layui-icon">&#xe654;</i>注销</a></th>
+                <!--                <th><a class="notice"><i class="layui-icon">&#xe654;</i>会议室公告</a></th>-->
+                <th><a class="search_btn">查找</a></th>
+                <th><a href="#" onclick="location.reload()"><i class="layui-icon">&#xe666;</i></a></th>
+            </tr>
+        </table>
+    </div>
+</div>
+<blockquote class="layui-elem-quote quoteBox">
+    <form class="layui-form" lay-filter="searchForm">
+        <div class="layui-inline">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" name="name"
+                       placeholder="请输入姓名"/>
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">手机号</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" name="phone"
+                       placeholder="请输入手机号"/>
+            </div>
+        </div>
+        <div class="layui-inline">
+        <label class="layui-form-label">用户角色</label>
+        <div class="layui-input-inline">
+            <select name="rank" lay-search>-->
+                <option value=""></option>
+                <option value="0">管理员</option>
+                <option value="1">0用户</option>
+
+            </select>
+        </div>
+    </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">用户状态</label>
+            <div class="layui-input-inline">
+                <select name="status" lay-search>-->
+                    <option value=""></option>
+                    <option value="0">活跃</option>
+                    <option value="1">注销</option>
+
+                </select>
+            </div>
+        </div>
+<!--        身份 0->管理员 1->用户-->
+        <!--<div class="layui-inline">
+            <label class="layui-form-label">地址</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" name="localtion"
+                    placeholder="请输入地址" />
+            </div>
+        </div>-->
+        <div class="layui-inline">
+            <label class="layui-form-label">性别</label>
+            <div class="layui-input-inline">
+                <select name="sex" lay-search>-->
+                    <option value=""></option>
+                    <option value="0">男</option>
+                    <option value="1">女</option>
+                </select>
+            </div>
+        </div>
+
+
+        <!--			<div class="layui-inline">-->
+        <!--				<label class="layui-form-label">角色</label>-->
+        <!--				<div class="layui-input-inline">-->
+        <!--					<select name="deptno" lay-search>-->
+        <!--						<option value=""></option>-->
+        <!--					</select>-->
+        <!--				</div>-->
+        <!--			</div>-->
+        <!--  <div class="layui-inline">
+              <a class="layui-btn layui-btn-warm" id="import_btn"><i
+                      class="layui-icon">&#xe67c;</i>批量导入</a>
+          </div>-->
+    </form>
+</blockquote>
+
+
+<table id="empList" lay-filter="empList"></table>
+
+
+<!--操作-->
+<script type="text/html" id="stuListBar">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del">注销</a>
+</script>
+<script type="text/javascript">
+    var ctxpath = '[[${#servletContext.contextPath}]]';
+</script>
+<script type="text/javascript" th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript" th:inline="none">
+    layui.use(
+        ['layer', 'table', 'jquery', 'form', 'laydate', 'upload'],
+        function () {
+            //layer = layui.layer;
+            $ = layui.jquery;
+            toplayer = parent.layer === undefined ? layui.layer : top.layer;
+            layer = layui.layer;
+            table = layui.table;
+            form = layui.form;
+            var upload = layui.upload;
+
+            //执行实例
+            // var uploadInst = upload.render({
+            //     elem: '#import_btn' //绑定元素
+            //
+            //     ,
+            //     url: 'api/list?op=empList' //上传接口
+            //     ,
+            //     before: function (d) {
+            //         var index = layer.msg('数据导入中，请稍候', {
+            //             icon: 16,
+            //             time: false,
+            //             shade: 0.8
+            //         });
+            //     },
+            //     accept: 'file',
+            //     done: function (res) {
+            //         layer.close(layer.index);
+            //         //上传完毕回调
+            //         if (res.code != 0) {
+            //             layer.msg(res.msg, {
+            //                 icon: 2
+            //             });
+            //         } else {
+            //             //刷新列表
+            //             tableIns.reload();
+            //         }
+            //     },
+            //     error: function () {
+            //         layer.close(layer.index);
+            //         //请求异常回调
+            //         layer.msg("上传失败,请稍后再试", {
+            //             icon: 2
+            //         });
+            //     }
+            // });
+
+            var laydate = layui.laydate;
+            laydate.render({
+                elem: "#hd"
+            });
+
+            //渲染table组件
+            tableIns = table.render({
+                elem: '#empList',
+                height: 500,
+                url: '/api/employee/tabList',//数据接口,
+                id: 'checkmeet',
+                page: true //开启分页
+                ,
+                cols: [[ //表头
+                    {
+                        title: "全选",
+                        width: 120,
+                        type: "checkbox",
+                        fixed: 'left'
+                    }, {
+                        field: 'id',
+                        title: '编号',
+                        width: 120,
+                        sort: true
+                    }, {
+                        field: 'name',
+                        title: '姓名',
+                        width: 120
+                    },  {
+                        field: 'phone',
+                        title: '手机号',
+                        width: 120
+                    },{
+                        field: 'sex',
+                        title: '性别',
+                        width: 120,
+                        templet: function (d) {
+                            if (d.sex == 0) {
+                                return "男";
+                            } else if (d.sex == 1) {
+                                return "女";
+                            } else {
+                                return "保密";
+                            }
+                        },
+                        sort: true
+                    },{
+
+                        title: '用户角色',
+                        width: 120,
+                        templet: function (d) {
+                            if (d.rank == 0) {
+                                return "管理员";
+                            } else {
+
+                                return "用户";
+                            }
+                        }
+                    },
+                    {
+                        field: 'status',
+                        title: '状态',
+                        width: 120,
+                        templet: function (d) {
+                            if (d.status == 0) {
+                                return "注销";
+                            } else if (d.status == 1) {
+                                return "活跃";
+                            }
+                        }
+                    },
+                    {
+                        title: "操作",
+                        fixed: 'right',
+                        width: 120,
+                        align: 'center',
+                        toolbar: '#stuListBar'
+                    }
+                ]]
+            });
+            //监听行工具栏事件
+            table.on('tool(empList)', function (obj) {
+                var layEvent = obj.event, data = obj.data;
+
+                if (layEvent === 'edit') { //编辑
+                    addEmp(data);
+                } else if (layEvent === 'del') { //删除
+                    layer.confirm('确定注销该用户信息？', {
+                        icon: 3,
+                        title: '提示信息'
+                    }, function (index) {
+                        $.get("/api/employee/delete?enos="+data.id, function (data) {
+                            if (data.code == 200) {
+                                tableIns.reload(); //刷新表格数据（也即让table重新加载url）
+                                layer.close(index);//关闭弹出框
+                            } else {
+                                layer.close(index);//关闭弹出框
+                                layer.msg(data.msg, {
+                                    icon: 2
+                                });
+                            }
+
+                        })
+                    });
+                } else if (layEvent === 'look') { //预览
+                    layer.alert("此功能需要前台展示，实际开发中传入对应的必要参数进行文章内容页面访问")
+                }
+            });
+
+           /* //设置班级
+            $(".setClass_btn").click(function () {
+                var checkData = table.checkStatus('empTable').data; //idTest 即为基础参数 id 对应的值
+                if (checkData == null || checkData.length == 0) {
+                    layer.msg("请先选中需要设置的学生", {
+                        "icon": 2
+                    });
+                    return;
+                }
+*/
+               /* class_layer = layer.open({
+                    type: 1,  //type:0 也行
+                    title: "选择班级",
+                    area: ["400px", "80%"],
+                    content: '<ul id="classTree" class="dtree" data-id="0"></ul>',
+                    btn: ['确认选择'],
+                    success: function (layero, index) {
+
+                        var DTree = dtree.render({
+                            //elem: "#classTree",
+                            obj: $("#classTree"),
+                            url: "api/class?op=list",
+                            dataStyle: "layuiStyle",  //使用layui风格的数据格式
+                            dataFormat: "list" //配置data的风格为list
+                        });
+
+
+                    },
+                    yes: function (index, layero) {
+                        var param = dtree.getNowParam("classTree"); // 获取当前选中节点
+
+                        //console.log(param.nodeId);
+                        //将选中学生班级设置为选中的班级
+                        //参数 班级id   选中的学生id
+                        var exist_class_id = false;
+                        var stu_ids = new Array();
+                        for (var i = 0; i < checkData.length; i++) {
+                            if (checkData[i].class_id != 0) {
+                                exist_class_id = true;
+                            }
+                            stu_ids.push(checkData[i].id);
+                        }
+                        if (exist_class_id) {
+                            layer.confirm('当前选中学生中部分已设置班级，是否更新？', {
+                                icon: 3,
+                                title: '提示信息'
+                            }, function (index) {
+                                layer.close(layer.index);
+                                //确认
+                                updateClass(param.nodeId, stu_ids.join(","));
+                            });
+                        } else {
+                            updateClass(param.nodeId, stu_ids.join(","));
+                        }
+                        //如果当前选中的学生已经存在id　需要提示是否修改
+
+                        //layer.close(index);
+                    }
+                });*/
+
+
+                /*
+                var ids = new Array();
+                for (var i in checkData) {
+                    ids.push(checkData[i].eno);
+                }
+
+                layer.confirm('确定删除选中员工信息？', {
+                    icon : 3,
+                    title : '提示信息'
+                }, function(index) {
+                    $.get("emp?op=delete&enos="+ids.join(","),function (d) {
+                        if (d.code == 200) {
+                            layer.msg("删除成功",{"icon":1});
+                            tableIns.reload();
+                        } else {
+                            layer.msg(d.msg,{"icon":2});
+                        }
+                    })
+
+                });
+
+                 */
+            // });
+            //添加员工事件
+
+            //添加员工事件
+            $(".addEmp_btn").click(function () {
+                addEmp();
+            });
+
+            //搜索事件
+            $(".search_btn").click(function () {
+                var data = form.val("searchForm");
+                //进行查询操作
+                tableIns.reload({
+                    where: data
+                    //设定异步数据接口的额外参数
+                });
+            });
+
+            $(".delAll_btn").click(function () {
+                //获取选中行
+                var checkData = table.checkStatus('checkmeet').data; //idTest 即为基础参数 id 对应的值
+                if (checkData == null
+                    || checkData.length == 0) {
+                    layer.msg("请先选中需要删除的记录", {"icon": 2});
+                    return;
+                }
+                var ids = new Array();
+                for (var i in checkData) {
+                    ids.push(checkData[i].id);
+                }
+
+                layer.confirm('确定删除选中员工信息？', {
+                    icon: 3,
+                    title: '提示信息'
+                }, function (index) {
+                    $.get("/api/employee/delete?enos=" + ids.join(","), function (d) {
+                        if (d.code == 200) {
+                            layer.msg("删除成功", {"icon": 1});
+                            tableIns.reload();
+                        } else {
+                            layer.msg(d.msg, {"icon": 2});
+                        }
+                    })
+                });
+            })
+        });
+
+    function updateClass(cid, sids) {
+        $.get("api/stu?op=update&cid=" + cid + "&sids=" + sids, function (d) {
+            if (d.code == 200) {
+                layer.close(class_layer);
+                tableIns.reload();
+
+            } else {
+                layer.close(class_layer);
+                layer.msg(d.msg, {icon: 2});
+            }
+        });
+    }
+
+    function addEmp(edit) {
+
+        var op = "";
+        if (edit == undefined || edit == null) {
+            op = "新增";
+        } else {
+            op = "编辑";
+        }
+        var index = layui.layer.open({
+            title: op + "员工",
+            type: 2,
+            area: ['500px', '300px'],
+            content: "/page/employee/empAdd",
+            success: function (layero, index) {
+                var body = layui.layer.getChildFrame('body', index);
+                if (edit) {
+                    //如果是编辑赋初始值
+                    body.find("[name = 'eno']").attr("disabled", true);
+                    body.find("#edit").val(JSON.stringify(edit));
+                    //form.render();
+                }
+                setTimeout(function () {
+                    layui.layer.tips('点击此处返回员工列表',
+                        '.layui-layer-setwin .layui-layer-close', {
+                            tips: 3
+                        });
+                }, 500)
+            }
+        })
+    /*    layui.layer.full(index);
+        //改变窗口大小时，重置弹窗的宽高，防止超出可视区域（如F12调出debug的操作）
+        $(window).on("resize", function () {
+            layui.layer.full(index);
+        })*/
+    }
+</script>
+</body>
+</html>

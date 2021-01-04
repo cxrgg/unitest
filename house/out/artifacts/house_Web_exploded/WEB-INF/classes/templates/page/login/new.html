@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}"/>
+    <link rel="stylesheet" th:href="@{/css/public.css}"/>
+
+</head>
+<body>
+<input type="hidden" id="edit">
+<div class="layui-container" style="margin-top: 20px;width: 500px">
+    <form class="layui-form layui-form-pane" lay-filter="meetForm" enctype="multipart/form-data">
+        <input type="hidden" name="id" class="layui-input">
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" lay-verify="required"
+                       placeholder="请输入姓名" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="password" lay-verify="required"
+                       placeholder="请输入密码" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">性别</label>
+            <div class="layui-input-block">
+                <select name="sex" lay-verify="required" lay-search>
+                    <option value=""></option>
+                    <option value="0">男</option>
+                    <option value="1">女</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">手机号码</label>
+            <div class="layui-input-block">
+                <input type="text" name="phone" lay-verify="required"
+                       placeholder="请输入手机号码" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">验证码</label>
+            <div class="layui-input-block" style="box-sizing:border-box">
+                <input type="text" name="messCode" lay-verify="required" style="width:65%;float: left"
+                       placeholder="请输入验证码" autocomplete="off" class="layui-input">
+                <input type="button" id="messCode" name="" value="发送验证码" style="width: 35%;float: left" class="layui-btn layui-btn-normal" >
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">身份证</label>
+            <div class="layui-input-block">
+                <input type="text" name="idcard" lay-verify="required"
+                       placeholder="请输入身份证吗" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item" hidden>
+            <label class="layui-form-label">用户角色(隐藏)                                                                                                                                                                                     )</label>
+            <div class="layui-input-block">
+                <input type="text" name="rank"
+                       placeholder="这是默认的在此页面只能注册用户" value="2" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="meetForm">提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+
+        <div style="height: 200px"></div>
+    </form>
+</div>
+
+<script type="text/javascript" th:src="@{/layui/layui.js}"></script>
+
+<script type="text/javascript">
+        //短信验证码倒计时
+
+
+
+    layui.use(['form', 'layer', 'element', 'laydate', 'jquery', 'upload'],
+        function () {
+            $ = layui.jquery;
+            form = layui.form;
+            layer = layui.layer;
+            element = layui.element;
+            var upload = layui.upload;
+            var laydate = layui.laydate;
+            var edit = null;
+            if ($("#edit").val() != '') {
+                edit = JSON.parse($("#edit").val());
+                form.val("meetForm", edit);
+            }
+
+            //发送短信验证码
+            $("#messCode").on("click", function(){
+                    var $mobile = $("input[name=phone]");
+                    var data = {};
+                    data.phone = $.trim($mobile.val());
+                    if(data.phone == ''){
+                        alert('请输入手机号码');
+                        return;
+                    }
+
+                    console.log(data.phone)
+                var reg = /^1\d{10}$/;
+                if(!reg.test(data.phone)){
+                    alert('请输入合法的手机号码');
+                    return ;
+                }
+
+                var time = 60;
+                var interval = window.setInterval(showTime,1000);
+                function showTime(){
+                    time--;
+                    $("#messCode").val(time+"发送验证码")
+                    $("#messCode").attr("disabled", "disabled");
+                    $("#messCode").attr("style", "background-color: #EEEEEE;width: 35%;float: left");//设为灰色，看起来更像不能操作的按钮
+                  if(time == 0){
+                      window.clearInterval(interval);
+                      $("#messCode").val("发送验证码")
+                      $("#messCode").removeAttr("disabled", "disabled");
+                      $("#messCode").removeAttr("style", "background-color: #EEEEEE;");
+                      $("#messCode").attr("style", "width: 35%;float: left");
+                  }
+                }
+                 $.ajax({
+                    url: "/api/sys/phone",
+                    async : true,
+                    type: "post",
+                    dataType: "text",
+                    // data: data
+                });
+            })
+
+
+            //监听表单提交事件
+            form.on('submit(meetForm)', function (data) {
+                var index = top.layer.msg('数据提交中，请稍候', {icon: 16, time: false, shade: 0.8});
+                var params = data.field;
+                console.log(JSON.stringify(params));
+                $.post("/api/sys/newEmp/add", params, function (d) {
+                    if (d.code == 200) {
+                        top.layer.close(index);
+                        top.layer.msg("操作成功！");
+                        layer.closeAll("iframe",5);
+                        //刷新父页面
+                        location.href = "/page/sys/login";
+                    } else {
+                        top.layer.close(index);
+                        layer.msg(d.msg, {"icon": 2});
+                    }
+                });
+                return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+            });
+        });
+</script>
+</body>
+</html>

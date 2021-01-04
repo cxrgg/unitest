@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <link rel="stylesheet" href="css/public.css"/>
+
+</head>
+<body>
+<input type="hidden" id="edit">
+<div class="layui-container" style="margin-top: 20px">
+    <form class="layui-form layui-form-pane" lay-filter="carForm">
+        <input type="hidden" name="id" class="layui-input">
+        <input type="hidden" name="id" class="layui-input">
+        <div class="layui-form-item">
+            <label class="layui-form-label">车牌</label>
+            <div class="layui-input-block">
+                <input type="text" name="mark" lay-verify="required"
+                       placeholder="请输入车牌" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">规格</label>
+            <div class="layui-input-block">
+                <input type="text" name="cname" lay-verify="required"
+                       placeholder="请输入规格" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <!--        <div class="layui-form-item">-->
+        <!--            <label class="layui-form-label">性别</label>-->
+        <!--            <div class="layui-input-block">-->
+        <!--                <input type="radio" name="sex" value="0" title="男" checked>-->
+        <!--                <input type="radio" name="sex" value="1" title="女"> <input-->
+        <!--                    type="radio" name="sex" value="2" title="保密">-->
+        <!--            </div>-->
+        <!--        </div>-->
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">位置</label>
+            <div class="layui-input-block">
+                <input type="text" name="deposit_region" lay-verify="required"
+                       placeholder="请输入位置" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">供应商</label>
+            <div class="layui-input-block">
+                <input type="text" name="manufacturer" lay-verify="required"
+                       placeholder="请输入供应商" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+<!--        <div class="layui-form-item">-->
+<!--            <label class="layui-form-label">内部设备</label>-->
+<!--            <div class="layui-input-block">-->
+<!--                <input type="text" name="facility" lay-verify="required"-->
+<!--                       placeholder="请输入室内用品" autocomplete="off" class="layui-input">-->
+<!--            </div>-->
+<!--        </div>-->
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">管理人</label>
+            <div class="layui-input-block">
+                <select name="empid" lay-verify="required" lay-search>
+                    <option value=""></option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">状态</label>
+            <div class="layui-input-block">
+                <input type="text" name="status" lay-verify="required"
+                       placeholder="状态" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <div class="layui-upload">
+                <button type="button" class="layui-btn" id="test1">上传图片</button>
+                <div class="layui-upload-list">
+                    <img class="layui-upload-img" id="demo1">
+                    <p id="demoText"></p>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="carForm">提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+
+        <div style="height: 200px"></div>
+
+
+    </form>
+</div>
+
+<script type="text/javascript" src="layui/layui.js"></script>
+
+<script type="text/javascript">
+    layui.use(['form', 'layer', 'element', 'laydate', 'jquery','upload'],
+        function () {
+            $ = layui.jquery;
+            form = layui.form;
+            layer = layui.layer;
+            element = layui.element;
+            var upload = layui.upload;
+            var laydate = layui.laydate;
+            var edit=null;
+            if($("#edit").val()!=''){
+                edit = JSON.parse($("#edit").val());
+                form.val("carForm", edit);
+            }
+            //获取部门信息，并初始化部门下拉组件
+            $.get("api/sys?op=all", function (d) {
+                if (d.code == 200) {
+                    for (var idx in d.data) {
+                        $("[name = 'empid']").append(
+                            "<option value='" + d.data[idx].id + "'>"
+                            + d.data[idx].name
+                            + "</option>");
+
+                        $("[name = 'empid']").next().children("dl")
+                            .append(
+                                "<dd lay-value='" + d.data[idx].id + "' class>"
+                                + d.data[idx].name
+                                + "</dd>")
+                    }
+                    form.render('select'); //渲染下拉组件
+                    //部门信息回填
+                    // form.val("carForm", {
+                    //     "empid": edit.empid
+                    // });
+                } else {
+                    layer.msg(d.msg, {
+                        icon: 2
+                    });
+                }
+            });
+            //图片上传
+
+            var uploadInst = upload.render({
+                elem: '#test1'
+                , url: '/upload/'
+                , before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $('#demo1').attr('src', result); //图片链接（base64）
+                    });
+                }
+                , done: function (res) {
+                    //如果上传失败
+                    if (res.code > 0) {
+                        return layer.msg('上传失败');
+                    }
+                    //上传成功
+                }
+                , error: function () {
+                    //演示失败状态，并实现重传
+                    var demoText = $('#demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        uploadInst.upload();
+                    });
+                }
+            });
+
+            //监听表单提交事件
+            form.on('submit(carForm)', function (data) {
+                var index = top.layer.msg('数据提交中，请稍候', {icon: 16, time: false, shade: 0.8});
+                var params = data.field;
+                console.log(JSON.stringify(params));
+                var method = "";
+                if (edit == null || edit == undefined) {
+                    method = "save";
+                } else {
+                    method = "update";
+                    var $name = $("[name='id']");
+
+                }
+                $.post("api/car?op=" + method, params, function (d) {
+                    if (d.code == 200) {
+                        top.layer.close(index);
+                        top.layer.msg("操作成功！");
+                        layer.closeAll("iframe");
+                        //刷新父页面
+                        parent.location.reload();
+                    } else {
+                        top.layer.close(index);
+                        layer.msg(d.msg, {"icon": 2});
+                    }
+                });
+                return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+            });
+        });
+</script>
+</body>
+</html>

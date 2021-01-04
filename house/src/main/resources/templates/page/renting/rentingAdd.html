@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>订单编辑</title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}"/>
+    <link rel="stylesheet" th:href="@{/css/public.css}"/>
+
+</head>
+<body>
+<input type="hidden" id="edit">
+<div class="layui-container" style="margin-top: 20px">
+    <form class="layui-form layui-form-pane" lay-filter="meetForm" enctype="multipart/form-data">
+        <input type="hidden" name="id" class="layui-input">
+        <div class="layui-form-item">
+            <label class="layui-form-label " style="width: 110px">重新选择时间</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" style="width: 100%" id="test10" name="beTime" lay-verify="required"
+                       autocomplete="off"  placeholder=" 开始时间 - 结束时间  不满一个月按一个月算">
+            </div>
+        </div>
+
+
+
+       <!-- <div class="layui-form-item" th:if="${session.employee.rank}==0">
+            <label class="layui-form-label">业主</label>
+            <div class="layui-input-block">
+                <select name="owner" lay-verify="required" lay-search>
+                    <option value=""></option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">状态</label>
+            <div class="layui-input-block">
+                <select name="state" lay-verify="required" lay-search>
+                    <option value="0">待发布</option>
+                    <option value="1">出租</option>
+                    <option value="2">已出租</option>
+                </select>
+            </div>
+        </div>-->
+
+
+        <!--        <div class="layui-form-item">-->
+        <!--            <div class="layui-upload">-->
+        <!--                <button type="button" class="layui-btn" id="test1">上传图片</button>-->
+        <!--                <div class="layui-upload-list">-->
+        <!--                    <img class="layui-upload-img" id="demo1">-->
+        <!--                    <p id="demoText"></p>-->
+        <!--                </div>-->
+        <!--            </div>-->
+        <!--        </div>-->
+        <!--        <div class="layui-form-item">-->
+        <!--            <input type="hidden" name="picture">-->
+        <!--        </div>-->
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="meetForm">提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+
+        <div style="height: 200px"></div>
+
+
+    </form>
+</div>
+
+<script type="text/javascript" th:src="@{/layui/layui.js}"></script>
+
+<script type="text/javascript">
+    layui.use(['form', 'layer', 'element', 'laydate', 'jquery', 'upload'],
+        function () {
+            $ = layui.jquery;
+            form = layui.form;
+            layer = layui.layer;
+            element = layui.element;
+            var upload = layui.upload;
+            var layuidate = layui.laydate;
+            var edit = null;
+            if ($("#edit").val() != '') {
+                edit = JSON.parse($("#edit").val());
+                console.log($("#edit").val());
+                console.log(edit);
+                form.val("meetForm", edit);
+            }
+            layuidate.render({
+                elem: '#test10'
+                , type: 'datetime'
+                ,theme: 'molv'
+                ,trigger:'click'
+                // ,mark:  parse
+                //{'0-11-26': '生日'}
+                , range: true
+
+            });//距离会议开始还有多久
+            //将startTime设置为全局变量，在setCountdown1中作为截止时间，当前时间作为开始时间。
+
+            //获取业主信息
+
+            //图片上传
+
+            /* var uploadInst = upload.render({
+                 elem: '#test1'
+                 , url: 'upload'
+                 , before: function (obj) {
+                     //预读本地文件示例，不支持ie8
+                     obj.preview(function (index, file, result) {
+                         $('#demo1').attr('src', result); //图片链接（base64）
+                     });
+                 }
+                 , done: function (res) {
+                     //如果上传失败
+                     // if (res.code > 0) {
+                     //     return layer.msg('上传失败');
+                     // }
+                     //上传成功
+
+                     console.log("返回值" + JSON.stringify(res))
+                     console.log("图片地址" + JSON.stringify(res.data))
+                     $("[name='picture']").val(JSON.stringify(res.data.src));
+                 }
+                 , error: function () {
+                     //演示失败状态，并实现重传
+                     var demoText = $('#demoText');
+                     demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                     demoText.find('.demo-reload').on('click', function () {
+                         uploadInst.upload();
+                     });
+                 }
+             });*/
+
+            //监听表单提交事件
+            form.on('submit(meetForm)', function (data) {
+                var index = top.layer.msg('数据提交中，请稍候', {icon: 16, time: false, shade: 0.8});
+                var params = data.field;
+                console.log(JSON.stringify(params));
+                $.post("/api/renting/add",params, function (d) {
+                    if (d.code == 200) {
+                        top.layer.close(index);
+                        layer.closeAll("iframe");
+                        //刷新父页面
+                        parent.location.reload();
+                    } else {
+                        top.layer.close(index);
+                        layer.msg(d.msg, {"icon": 2});
+                    }
+                });
+                return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+            });
+        });
+</script>
+</body>
+</html>

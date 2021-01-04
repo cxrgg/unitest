@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title >我的预订 房客</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" th:href="@{/css/public.css}" media="all"/>
+</head>
+<body class="childrenBody">
+<div style="width: 100%; height: 80px; position: relative; line-height: 80px;">
+    <div class="layui-form"
+         style="width: 550px; height: 80px; float: right;">
+        <table class="layui-table">
+            <tr>
+                <th><a href="#"><i class="layui-icon">&#xe65c;</i></a></th>
+                <!--                <th><a class="addMeet_btn"><i class="layui-icon">&#xe654;</i>我要当房主</a></th>-->
+                <!--                <th><a class="addMeet_btn"><i class="layui-icon">&#xe654;</i>我要租房</a></th>-->
+                <th><a class="delAll_btn"><i
+                        class="layui-icon">&#xe654;</i>删除</a></th>
+                <!--                <th><a class="notice"><i class="layui-icon">&#xe654;</i>会议室公告</a></th>-->
+                <th><a class="search_btn">查找</a></th>
+                <th><a href="#" onclick="location.reload()"><i class="layui-icon">&#xe666;</i></a></th>
+            </tr>
+        </table>
+    </div>
+</div>
+请输入要查询的信息
+<blockquote class="layui-elem-quote quoteBox">
+    <form class="layui-form" lay-filter="searchForm">
+        <div class="layui-inline">
+        <label class="layui-form-label">房屋名称</label>
+        <div class="layui-input-inline">
+            <select name="room" lay-search>
+                <option value=""></option>
+            </select>
+        </div>
+    </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">位置</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" name="location"
+                       placeholder="请输入位置"/>
+            </div>
+        </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">户型布局</label>
+            <div class="layui-input-inline">
+                <input type="text" class="layui-input" name="model"
+                       placeholder="内部设备"/>
+            </div>
+        </div>
+
+        <!--            <div class="layui-inline">-->
+        <!--                <label class="layui-form-label">业主</label>-->
+        <!--                <div class="layui-input-inline">-->
+        <!--                    <select name="owner" lay-search>-->
+        <!--                        <option value=""></option>-->
+        <!--                    </select>-->
+        <!--                </div>-->
+        <!--            </div>-->
+        <div class="layui-inline">
+            <label class="layui-form-label">面积</label>
+            <div class="layui-input-inline">
+                <select name="area" lay-search>
+                    <option value=""></option>
+                </select>
+            </div>
+        </div>
+        <!--            <br>-->
+        <!--            <br>-->
+        <!--            <div class="layui-inline">-->
+        <!--                <a class="layui-btn layui-btn-normal addMeet_btn">添加会议室</a>-->
+        <!--            </div>-->
+        <!--            <div class="layui-inline">-->
+        <!--                <a class="layui-btn layui-btn-danger delAll_btn">批量删除</a>-->
+        <!--            </div>-->
+        <!--            <div class="layui-inline">-->
+        <!--                <a class="layui-btn layui-btn-danger notice">会议室公告</a>-->
+        <!--            </div>-->
+    </form>
+
+</blockquote>
+
+
+<table id="roomList" lay-filter="roomList"></table>
+<!--放大图片 -->
+<div id='prevModal'>
+    <img id='img_prev' class="layui-circle" width="535" height="535"/>
+</div>
+<!--给图片加样式-->
+<!--#prevModal {width:100%; height:100%; text-align:center; display:none;}-->
+<!--        #img_prev {max-width:98%; max-height:98%; margin: 10px auto}-->
+
+<!--操作-->
+<script type="text/html" id="stuListBar">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-xs" lay-event="del">删除</a>
+    <a class="layui-btn layui-btn-xs" lay-event="history">留言</a>
+</script>
+<script type="text/html" id="temp_img">
+    <img src="{{d.picture}}">
+</script>
+<script type="text/javascript">
+    var ctxpath = '[[${#servletContext.contextPath}]]';
+</script>
+<script type="text/javascript" th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript" th:inline="none">
+    layui.use(['layer', 'table', 'jquery', 'form', 'laydate', 'upload'],
+        function () {
+            //layer = layui.layer;
+            $ = layui.jquery;
+            toplayer = parent.layer === undefined ? layui.layer : top.layer;
+            layer = layui.layer;
+            table = layui.table;
+            form = layui.form;
+            var upload = layui.upload;
+
+            //执行实例
+            var uploadInst = upload.render({});
+
+
+            //渲染table组件
+            tableIns = table.render({
+                elem: '#roomList',
+                height: 500,
+                url: ctxpath + '/api/rented/list' //数据接口
+                , id: 'checkmeet',
+                page: true //开启分页
+                ,
+                cols: [[ //表头
+                    {
+                        title: "全选",
+                        width: 80,
+                        type: "checkbox",
+                        fixed: 'left'
+                    },
+                    // {
+                    //     field: 'picture',
+                    //     title: '图片',
+                    //     width: 80,
+                    //     templet: '#temp_img'
+                    // },
+                    {
+                        field: 'room',
+                        title: '房屋名',
+                        width: 129,
+                        sort: true,
+                        templet: function (d) {
+                            var ca;
+                            $.ajaxSettings.async = false;
+                            $.post("/api/room/one/" + d.room, function (date) {
+                                if (date.code == 200) {
+                                    ca = date.data.name;
+                                }
+                            })
+                            return ca;
+                            $.ajaxSettings.async = true;
+                        }
+                    },
+                    {
+                        field: 'landlord',
+                        title: '房主',
+                        width: 130,
+                        templet: function (d) {
+                            var ca;
+                            $.ajaxSettings.async = false;
+                            $.post("/api/employee/one/" + d.landlord, function (date) {
+                                if (date.code == 200) {
+                                    ca = date.data.name;
+                                }
+                            })
+                            return ca;
+                            $.ajaxSettings.async = true;
+                        }
+
+                    }, {
+                        field: 'lodger',
+                        title: '租客',
+                        width: 130,
+                        templet: function (d) {
+                            var ca;
+                            $.ajaxSettings.async = false;
+                            $.post("/api/employee/one/" + d.lodger, function (date) {
+                                if (date.code == 200) {
+                                    ca = date.data.name;
+                                }
+                            })
+                            return ca;
+                            $.ajaxSettings.async = true;
+                        }
+                    },
+                    // {
+                    //     field: 'owner',
+                    //     title: '业主',
+                    //     width: 130,
+                    //     templet: function (d) {
+                    //         var ca;
+                    //         $.ajaxSettings.async = false;
+                    //         $.post("/api/employee/one/" + d.owner, function (date) {
+                    //             if (date.code == 200) {
+                    //                 ca = date.data.name;
+                    //             }
+                    //         })
+                    //         return ca;
+                    //         $.ajaxSettings.async = true;
+                    //     }
+                    // },
+
+                    {
+                        field: 'status',
+                        title: '状态',
+                        width: 80,
+                        templet: function (d) {
+                            if (d.status == 0) {
+                                return "<p style='color: lightseagreen'>待确认</p>";
+                            } else if (d.status == 1) {
+                                return "<p style='color: lightseagreen'>交易成功</p>";
+                            } else {
+                                return "<p style='color: red'>交易失败</p>";
+                            }
+                        }
+                    }, {
+                        field: 'ctime',
+                        title: '租借发起时间',
+                        width: 163
+                    }, {
+                        field: 'stime',
+                        title: '实际租房开始时间',
+                        width: 163,
+                        sort: true
+                    }, {
+                        field: 'etime',
+                        title: '实际租房开始时间',
+                        width: 163,
+                        sort: true
+                    }, {
+                        title: "操作",
+                        fixed: 'right',
+                        width: 303,
+                        align: 'center',
+                        toolbar: '#stuListBar'
+                    }
+                ]], done: function () {
+                    hoverOpenImg();
+                }
+            });
+
+            //监听行工具栏事件
+            table.on('tool(roomList)', function (obj) {
+                var layEvent = obj.event, data = obj.data;
+
+                if (layEvent === 'edit') { //编辑
+                    meetAdd(data);
+                } else if (layEvent === 'del') { //删除
+                    layer.confirm('确定删除该会议室信息？', {
+                        icon: 3,
+                        title: '提示信息'
+                    }, function (index) {
+                        $.get("/api/renting/delete", {
+                            enos: data.id
+                            //将需要删除的员工编号作为参数传入
+                        }, function (data) {
+                            if (data.code == 200) {
+                                tableIns.reload(); //刷新表格数据（也即让table重新加载url）
+                                layer.close(index);//关闭弹出框
+                            } else {
+                                layer.close(index);//关闭弹出框
+                                layer.msg(data.msg, {
+                                    icon: 2
+                                });
+                            }
+                        })
+                    });
+                } else if (layEvent === 'reserve') {
+                    console.log(data);
+                    if (data.status == 2 || data.status == 3) {
+                        layer.msg("此会议室暂时无法使用,请选择其他会议室", {icon: 2});
+                    } else {
+                        reserve(data);
+                    }
+
+                } else if (layEvent === 'history') {
+                    history(data);
+                } else if (layEvent === 'calendar') {
+                    calendar(data);
+                }
+            });
+
+
+            //添加员工事件
+            $(".addMeet_btn").click(function () {
+                meetAdd();
+            });
+
+
+            //搜索事件
+            $(".search_btn").click(function () {
+                var data = form.val("searchForm");
+                console.log(data)
+                //进行查询操作
+                tableIns.reload({
+                    where: data
+                    //设定异步数据接口的额外参数
+                });
+            });
+            $(".notice").click(function () {
+                var index = layui.layer.open({
+                    title: '会议室公告',
+                    type: 2,
+                    area: ['500px', '300px'],
+                    content: "notice?op=notice",
+                    success: function (layero, index) {
+                        // var body = layui.layer.getChildFrame('body', index);
+                        // if (edit) {
+                        //     //如果是编辑赋初始值
+                        //     // body.find("[name = 'eno']").attr("disabled", true);
+                        //     body.find("#edit").val(JSON.stringify(edit));
+                        //     form.render();
+                        //     var iframeWin = window[layero.find('iframe')[0]['name']];
+                        //     iframeWin.initView();
+                        // }
+                    }
+                })
+            });
+
+
+            $(".delAll_btn").click(function () {
+                //获取选中行
+                var checkData = table
+                    .checkStatus('checkmeet').data; //idTest 即为基础参数 id 对应的值
+                if (checkData == null
+                    || checkData.length == 0) {
+                    layer.msg("请先选中需要删除的记录", {"icon": 2});
+                    return;
+                }
+                var ids = new Array();
+                for (var i in checkData) {
+                    ids.push(checkData[i].id);
+                }
+                console.log(ids);
+                layer.confirm('确定删除选中房屋信息？', {
+                    icon: 3,
+                    title: '提示信息'
+                }, function (index) {
+                    $.get("/api/renting/delete?enos=" + ids.join(","), function (d) {
+                        if (d.code == 200) {
+                            layer.msg("删除成功", {
+                                "icon": 1
+                            });
+                            tableIns.reload();
+                        } else {
+                            layer.msg(d.msg, {
+                                "icon": 2
+                            });
+                        }
+                    })
+
+                });
+
+            })
+
+        });
+
+    //图片放大
+    function hoverOpenImg() {//鼠标悬浮显示头像大图
+        var img_show = "请不要乱动"; // tips提示
+        $('td img').hover(function () {
+            var img = "<img class='img_msg' src='" + $(this).attr('src') + "' style='width:100%;' />";
+            img_show = layer.tips(img, this, {
+                tips: [2, 'rgba(41,41,41,.0)']
+                , area: ['30%']
+            });
+        }, function () {
+            layer.close(img_show);
+        });
+        $('td img').attr('style', 'max-width:70px');
+    }
+
+    function reserve(edit) {
+        var index = layui.layer.open({
+            title: "预定会议室",
+            type: 2,
+            area: ['680px', '620px'],
+            content: "page?op=reserveMeet",
+            success: function (layero, index) {
+                var body = layui.layer.getChildFrame('body', index);
+                if (edit) {
+                    //如果是编辑赋初始值
+                    // body.find("[name = 'eno']").attr("disabled", true);
+                    console.log("edit" + JSON.stringify(edit));
+                    body.find("#edit").val(JSON.stringify(edit));
+                    form.render();
+                }
+            }
+        })
+    }
+
+    function history(edit) {
+        var index = layui.layer.open({
+            title: "会议室预定历史",
+            type: 2,
+            area: ['680px', '620px'],
+            content: "page?op=historyMeet&id=" + edit.id,
+            success: function (layero, index) {
+            }
+        })
+    }
+
+    function calendar(edit) {
+        var index = layui.layer.open({
+            title: '会议室日历',
+            type: 2,
+            area: ['680px', '620px'],
+            content: "page?op=calendar&id=" + edit.id,
+            success: function (layero, index) {
+                var body = layui.layer.getChildFrame('body', index);
+                if (edit) {
+                    //如果是编辑赋初始值
+                    // body.find("[name = 'eno']").attr("disabled", true);
+                    body.find("#edit").val(JSON.stringify(edit));
+                    form.render();
+                    var iframeWin = window[layero.find('iframe')[0]['name']];
+                    iframeWin.initView();
+                }
+            }
+        })
+    }
+
+    function meetAdd(edit) {
+        var op = "";
+        if (edit == undefined || edit == null) {
+            op = "新增";
+        } else {
+            op = "编辑";
+        }
+        var index = layui.layer.open({
+            title: op + "房源",
+            type: 2,
+            area: ['600px', '500px'],
+            content: ctxpath + "/page/room/add",
+            success: function (layero, index) {
+                var body = layui.layer.getChildFrame('body', index);
+                if (edit) {
+                    //如果是编辑赋初始值
+                    //   body.find("[name = 'eno']").attr("disabled", true);
+                    body.find("#edit").val(JSON.stringify(edit));
+                    form.render();
+                }
+            }
+        })
+        layui.layer.full(index);
+        //改变窗口大小时，重置弹窗的宽高，防止超出可视区域（如F12调出debug的操作）
+        $(window).on("resize", function () {
+            layui.layer.full(index);
+        })
+
+    }
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'/>
+    <link href='../packages/core/main.css' rel='stylesheet'/>
+    <link href='../packages/daygrid/main.css' rel='stylesheet'/>
+    <link href='../packages/timegrid/main.css' rel='stylesheet'/>
+    <link href='../packages/list/main.css' rel='stylesheet'/>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <link rel="stylesheet" href="css/public.css"/>
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script src='../packages/core/main.js'></script>
+    <script src='../packages/core/locales-all.js'></script>
+    <script src='../packages/interaction/main.js'></script>
+    <script src='../packages/moment/main.js'></script>
+    <script src='../packages/daygrid/main.js'></script>
+    <script src='../packages/timegrid/main.js'></script>
+    <script src='../packages/list/main.js'></script>
+
+
+    <script type="text/javascript" src="layui/layui.js"></script>
+
+    <script type="text/javascript">
+
+
+        function initView() {
+
+            layui.use(['layer', 'table', 'form'], function () {
+                table = layui.table;
+                form = layui.form;
+                var edit = JSON.parse($("#edit").val());
+                console.log(edit);
+                form.val("calendarForm", edit);
+                $("[name='id']").val(edit.id);
+                console.log("当前日历id=" + edit.id);
+                console.log("$(\"[name='id']\").val=" + $("[name='id']").val());
+
+                var edit = JSON.parse($("#edit").val());
+                console.log("日历："+edit);
+                // form.val("reserveMeet", edit);
+
+                // var initialLocaleCode = 'zh-cn';调整语言 默认语言
+                var localeSelectorEl = document.getElementById('locale-selector');
+                var calendarEl = document.getElementById('calendar');
+                console.log("$(\"[name='nid']\").val=" + $("[name='id']").val());
+                $.get("api/meet?op=calHistory&id=" + $("[name='id']").val(), function (d) {
+                    console.log("这是传过来的json" + JSON.stringify(d));
+
+                        var calendar = new FullCalendar.Calendar(calendarEl, {
+                            plugins: ['interaction', 'dayGrid', 'timeGrid', 'list'],
+                            header: {
+                                left: 'prev,next today',
+                                center: 'title',
+                                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+                            },
+                            // defaultDate: '2019-08-12',//默认日期
+                            // locale: initialLocaleCode,
+                            locale: 'zh-cn',//默认文字
+                            buttonIcons: false, // 显示prev/next文本上一月下一月
+                            weekNumbers: true, //这一周是今年的第几周
+                            navLinks: true, // can click day/week names to navigate views
+                            eventOverlap: false,//是否允许时间线重叠，流批
+                            // eventConstraint:'businessHours',//只允许拖到上班时间内 朝九晚五
+                            // businessHours: {
+                            //     dow: [1, 2, 3, 4], // 周一 - 周四
+                            //
+                            //     start: '10:00', // 上午10点开始
+                            //     end: '18:00', // 下午18点结束
+                            // },
+                            firstDay:0,
+                            editable: true, //可移动拖拉标记事件
+                            eventLimit: true, //可以点击日/周名称来浏览视图吗
+                            windowResizeDelay: 100,
+                            eventDragStart: function (obj) {
+                                //当事件开始拖动时触发：obj.event代表当前对象所有的值
+                                layer.msg("您正在修改日历");
+                                // eventTextColor:"#FF0000";
+                            },
+                            events: d,
+                            eventDragStop: function (obj) {
+                                //拖动事件结束触发，obj.event代表旧的对象所有的值
+                            },
+                            eventDrop: function (obj) {
+                                //拖动事件结束触发，obj.event代表新移动到的但前对象所有的值
+                                //是拖动而不是调整事件大小
+                                console.log("event" + obj.event.title);
+                                var postData = [];
+                                postData.push(obj.event.groupId);
+                                postData.push(obj.event.start.getTime());
+                                postData.push(obj.event.end.getTime());
+                                postData = postData.join(',');
+                                $.get("api/calender?op=calender&index=" + postData, function (d) {
+                                    if (d.code==200){
+                                        layer.msg("修改成功");
+                                    }else{
+                                        layer.msg(d.msg,{icon:2});
+                                        //移动失败返回
+                                        obj.revert();
+                                    }
+                                })
+
+                            },
+
+                            eventResize: function (obj) {
+                                //调整事件大小，也可以拖动，但只在日，周图生效
+                                console.log("event" + obj.event.title);
+                                var postData = [];
+                                postData.push(obj.event.groupId);
+                                postData.push(obj.event.start.getTime());
+                                postData.push(obj.event.end.getTime());
+                                postData = postData.join(',');
+                                $.get("api/calender?op=calender&index=" + postData, function (d) {
+                                    if (d.code==200){
+                                        layer.msg("修改成功");
+                                    }else{
+                                        layer.msg(d.msg,{icon:2});
+                                        obj.revert();
+                                    }
+                                })
+                            },
+                            // eventDestroy:function(ob){
+                            //
+                            // },
+                            dateClick: function(obj) {
+                                var index = layui.layer.open({
+                                    title: "预定会议室",
+                                    type: 2,
+                                    area: ['600px', '600px'],
+                                    content: "page?op=reserveMeet",
+                                    success: function (layero, index) {
+                                        var body = layui.layer.getChildFrame('body', index);
+                                            //如果是编辑赋初始值
+                                            // body.find("[name = 'eno']").attr("disabled", true);
+                                            body.find("#edit").val(JSON.stringify(JSON.parse($("#edit").val())));
+                                            form.render();
+                                    }
+                                })
+                            },
+                            eventMouseEnter: function (element) {
+                                //点击触发事件
+                                // var postData = [];
+                                // postData.push(obj.event.groupId);
+                                // postData.push(obj.event.start.getTime());
+                                // postData.push(obj.event.end.getTime());
+                                // postData = postData.join(',');
+                                //
+                                // layer.open({
+                                //     type: 1 //此处以iframe举例
+                                //     ,title:"详细信息"
+                                //     ,area: ['300px', '200px']
+                                //     ,shade: 0
+                                //     ,maxmin: true
+                                //     ,content: obj.event.title
+                                // });
+                                $(element).css('border-color', 'red');
+                                //鼠标移入事件
+                            },
+                            selectable:true,
+                            eventClick: function (obj) {
+                                //点击触发事件
+                                // var postData = [];
+                                // postData.push(obj.event.groupId);
+                                // postData.push(obj.event.start.getTime());
+                                // postData.push(obj.event.end.getTime());
+                                // postData = postData.join(',');
+                                //content: '测试回调',
+                                layer.confirm("是否删除"+obj.event.title,{icon: 3, title:'提示'}, function(index){
+                                    //do something
+                                    $.get("api/meet?op=deleteRe&enos="+obj.event.groupId,function (d) {
+                                        if (d.code==200){
+                                            layer.msg("删除成功");
+                                            obj.event.remove();
+                                        }else{
+                                            layer.msg(d.msg);
+                                        }
+                                    })
+                                    layer.close(index);
+                                });
+                                // layer.open({
+                                //     type: 2 //此处以iframe举例
+                                //     ,title:"点击确认->删除"
+                                //     ,area: ['300px', '200px']
+                                //     ,shade: 0
+                                //     ,maxmin: true
+                                //     ,content:
+                                //     ,success: function(layero, index){
+                                //         console.log(layero, index);
+                                //     }
+                                //     , yes: function(index, layero){
+                                //
+                                //         layer.close(index); //如果设定了yes回调，需进行手工关闭
+                                //     }
+                                // });
+                                // $(this).css('border-color', 'red');
+                            }
+
+                        });
+                        calendar.render();
+                })
+
+            })
+
+
+            document.addEventListener('DOMContentLoaded', function () {
+
+
+            })
+
+        }
+
+
+    </script>
+    <!--    浮动层最下面   -->
+    <style>
+        .test {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background-color: red;
+        }
+    </style>
+
+</head>
+<body>
+
+<!--  <div id='top'>
+    Locales:
+    <select id='locale-selector'></select>
+  </div> -->
+
+<div>
+    <form class="layui-form layui-form-pane" id="reserveMeet" lay-filter="reserveMeet"
+          method="api/meet?op=toReserveMeet">
+        <div class="layui-form-item">
+
+            <div id='calendar'></div>
+
+            <div class="layui-input-block">
+                <input type="hidden" name="id" lay-verify="required" disabled
+                       placeholder="" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
+    <input type="hidden" id="edit">
+</div>
+
+
+<!--<div class="test"></div>-->
+
+</body>
+</html>

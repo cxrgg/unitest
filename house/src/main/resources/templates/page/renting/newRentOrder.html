@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>预定房源表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all"/>
+    <link rel="stylesheet" th:href="@{/css/public.css}" media="all"/>
+</head>
+<body>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<input type="hidden" id="edit">
+
+<form class="layui-form layui-form-pane" id="reserveMeet" lay-filter="reserveMeet" method="api/meet?op=toReserveMeet">
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <input type="hidden" name="id" lay-verify="required" disabled
+                   placeholder="" autocomplete="off" class="layui-input" >
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">您要租的是</label>
+        <div class="layui-input-block">
+            <input type="text" name="name" lay-verify="required" disabled
+                   placeholder="" autocomplete="off" class="layui-input">
+        </div>
+
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">地址</label>
+        <div class="layui-input-block">
+            <input type="text" name="location" lay-verify="required" disabled
+                   placeholder="" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">户型布局</label>
+        <div class="layui-input-block">
+            <input type="text" name="model" lay-verify="required" disabled
+                   placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">价格/月</label>
+        <div class="layui-input-block">
+            <input type="text" name="price" lay-verify="required" disabled
+                   placeholder="请输入价格" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">面积</label>
+        <div class="layui-input-block">
+            <input type="text" name="area" lay-verify="required" disabled
+                   placeholder="请输入面积" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+
+
+<!--    <div class="layui-form-item" >-->
+<!--        <label class="layui-form-label">业主</label>-->
+<!--        <div class="layui-input-block">-->
+<!--            <select name="owner" lay-verify="required" lay-search>-->
+<!--                <option value=""></option>-->
+<!--            </select>-->
+<!--        </div>-->
+<!--    </div>-->
+    <div class="layui-form-item">
+        <label class="layui-form-label " style="width: 110px">预定时间</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" style="width: 100%" id="test10" name="beTime" lay-verify="required"
+                   autocomplete="off"  placeholder=" 开始时间 - 结束时间  不满一个月按一个月算">
+        </div>
+    </div>
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+        <legend><a>预计租房时间</a><a id="along">多久</a> </legend>
+    </fieldset>
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+        <legend><a>租房持续时间</a><a id="aTime" >几个月</a> </legend>
+    </fieldset>
+    <br><br><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <button class="layui-btn" lay-submit lay-filter="reserveMeet">提交</button>
+    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+</form>
+<script type="text/javascript" th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript">
+    layui.use(['layer', 'table', 'jquery', 'form', 'laydate', 'upload', 'util'], function () {
+        //layer = layui.layer;
+        $ = layui.jquery;
+        toplayer = parent.layer === undefined ? layui.layer : top.layer;
+        layer = layui.layer;
+        table = layui.table;
+        form = layui.form;
+        var util = layui.util;
+        var upload = layui.upload;
+        var layuidate = layui.laydate;
+
+        var edit = JSON.parse($("#edit").val());
+        console.log(edit);
+        form.val("reserveMeet", edit);
+
+        // $.get("api/meet?op=mark",function(test) {
+        //     var parse = JSON.parse(test);
+        layuidate.render({
+            elem: '#test10'
+            , type: 'datetime'
+            ,theme: 'molv'
+            ,trigger:'click'
+            // ,mark:  parse
+            //{'0-11-26': '生日'}
+            , range: true
+            , done: function (value, date, endDate) {
+                // console.log(value); //得到日期生成的值，如：2017-08-18
+                // console.log(date); //得到日期时间对象：{year: 2017, month: 8, date: 18, hours: 0, minutes: 0, seconds: 0}
+                // console.log(endDate); //得结束的日期时间对象，开启范围选择（range: true）才会返回。对象成员同上。
+                setCountdown1(date.year, date.month - 1, date.date, date.hours, date.minutes, date.seconds);
+                setCountdown2(endDate.year, endDate.month - 1, endDate.date, endDate.hours, endDate.minutes, endDate.seconds);
+            }
+        });
+
+        // })
+
+        //距离会议开始还有多久
+        //将startTime设置为全局变量，在setCountdown1中作为截止时间，当前时间作为开始时间。
+        var startTime = null;
+        var thisTimer1, setCountdown1 = function (y, M, d, H, m, s) {
+            startTime = new Date(y, M || 0, d || 1, H || 0, m || 0, s || 0) //结束日期
+            var serverTime = new Date(); //假设为当前服务器时间，这里采用的是本地时间，实际使用一般是取服务端的
+
+            clearTimeout(thisTimer1);
+            util.countdown(startTime, serverTime, function (date, serverTime, timer) {
+                var str = date[0] + '天' + date[1] + '时' + date[2] + '分' + date[3] + '秒';
+                $('#along').text(str);
+                thisTimer1 = timer;
+            });
+        };
+        // setCountdown(2099,1,1);
+        //会议持续多久
+        //在setCountdown1中作为开始时间，传过来的endtime作为终止时间。
+        var thisTimer2, setCountdown2 = function (y, M, d, H, m, s) {
+            var startTime2 = new Date(y, M || 0, d || 1, H || 0, m || 0, s || 0) //结束日期
+            // , serverTime = new Date(); //假设为当前服务器时间，这里采用的是本地时间，实际使用一般是取服务端的
+            util.countdown(startTime2, startTime, function (date, serverTime, timer) {
+                var str = date[0] + '天' + date[1] + '时' + date[2] + '分' + date[3] + '秒';
+                $('#aTime').html(str);
+                // $('#aTime').text(str);
+                thisTimer2 = timer;
+                clearTimeout(thisTimer2);
+            });
+        };
+        //获取业主信息
+   /*     $.get("/api/employee/list", function (d) {
+            console.log(d)
+            if (d.code == 200) {
+                for (var idx in d.data) {
+                    $("[name = 'owner']").append(new Option(d.data[idx].name,d.data[idx].id))}
+                form.render('select'); //渲染下拉组件
+                //部门信息回填
+            } else {
+                layer.msg(d.msg, {
+                    icon: 2
+                });
+            }
+        });*/
+
+        form.on('submit(reserveMeet)', function(data) {
+            var index = top.layer.msg('数据提交中，请稍候', {icon: 16,time:false,shade:0.8});
+            var params = data.field;
+            console.log(JSON.stringify(params));
+            $.post("/api/renting/toRenting",params,function(d){
+                alert("这是返回的数据");
+                console.log("这是返回的数据"+JSON.stringify(d));
+                if (d.code == 200) {
+                    // top.layer.close(index);
+                    top.layer.close(index);
+                    top.layer.msg("预定成功！");
+                    layer.closeAll("iframe");
+                    //刷新父页面
+                    parent.location.reload();
+                } else {
+                    top.layer.close(index);
+                    layer.msg(d.msg,{"icon":2});
+                }
+            });
+            return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+    })
+
+</script>
+</body>
+</html>
