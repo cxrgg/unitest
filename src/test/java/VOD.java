@@ -15,7 +15,7 @@ public class VOD {
 //    @Test
 //    public void getTranscodeSummary() throws Exception {
 //        AliyunVODTemplate aliyunVODTemplate = new AliyunVODTemplate(AliyunVODTemplate.getOssClient());
-//        GetTranscodeSummaryResponse transcodeSummary = aliyunVODTemplate.getTranscodeSummary(aliyunVODTemplate.client, "3f298d2f02b444f793d4f46943d60142,284c00bd34644b909069f7b7963d737b");
+//        GetTranscodeSummaryResponse transcodeSummary = aliyunVODTemplate.getTranscodeSummary(aliyunVODTemplate.client, "**************,**************");
 //        for (GetTranscodeSummaryResponse.TranscodeSummary summary : transcodeSummary.getTranscodeSummaryList()) {
 //            //转码状态
 //            System.out.println("TranscodeStatus = " + summary.getTranscodeStatus());

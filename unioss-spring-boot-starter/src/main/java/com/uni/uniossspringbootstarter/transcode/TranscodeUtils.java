@@ -12,7 +12,7 @@
 //
 //public class TranscodeUtils {
 //
-//	public static final String DEFAULT_PIPELINEID = "0c9da8a3314a41a4a2c4a444e941624d";
+//	public static final String DEFAULT_PIPELINEID = "**************";
 //
 //	public static final String M3U8_AUTOADD_EX = ".m3u8";
 //

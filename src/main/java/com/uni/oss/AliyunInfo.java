@@ -18,13 +18,13 @@ public class AliyunInfo {
     /**
      * 拥有较高权限的子账号
      */
-    public static final String ACCESSKEY_ID = "LTAI4GJjHrKd9DGWQ4fDicoX";
-    public static final String ACCESSKEY_SECRET = "PCbGrgRD7ACvk6ZhVeQLkdjmW7yp2k";
+    public static final String ACCESSKEY_ID = "**************";
+    public static final String ACCESSKEY_SECRET = "**************";
 
     /**
      * 桶
      */
-    public static final String BUCKET_NAME = "unitestb";
+    public static final String BUCKET_NAME = "**************";
 
     /**
      * 点播服务接入区域
@@ -32,8 +32,8 @@ public class AliyunInfo {
     public static final String REGIONID_SHANGHAI = "cn-shanghai";
     public static final String LOCATION_SHANGHAI = "oss-cn-shanghai";
 
-    public static final String ENDPOINT_SHANGHAI = "oss-cn-shanghai.aliyuncs.com";
-    public static final String ENDPOINT_SHANGHAI_INTERNAL = "oss-cn-shanghai-internal.aliyuncs.com";
+    public static final String ENDPOINT_SHANGHAI = "**************";
+    public static final String ENDPOINT_SHANGHAI_INTERNAL = "**************";
 
     /**
      * 点播服务控制台

@@ -46,7 +46,7 @@ public class AliyunVODTemplate {
         return response.getMediaInfoJob();
     }
 
-    private static String pipelineId = "0c9da8a3314a41a4a2c4a444e941624d";
+    private static String pipelineId = "**************";
     private static String templateId = "S00000002-100070";
     private static String ossLocation = "oss-cn-hangzhou";
     private static String ossBucket = AliyunInfo.BUCKET_NAME;
